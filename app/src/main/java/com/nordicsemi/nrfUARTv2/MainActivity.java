@@ -84,7 +84,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
     private BluetoothAdapter mBtAdapter = null;
     private ListView messageListView;
     private ArrayAdapter<String> listAdapter;
-    private Button btnConnectDisconnect,btnSend;
+    private Button btnConnectDisconnect,btnSend, btnSendTime;
     private EditText edtMessage;
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,6 +102,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         messageListView.setDivider(null);
         btnConnectDisconnect=(Button) findViewById(R.id.btn_select);
         btnSend=(Button) findViewById(R.id.sendButton);
+        btnSendTime =(Button)findViewById(R.id.buttonSendTime);
         edtMessage = (EditText) findViewById(R.id.sendText);
         service_init();
 
@@ -155,6 +156,28 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
 					e.printStackTrace();
 				}
                 
+            }
+        });
+
+        btnSendTime.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                try {
+                    Date date = new Date();
+                    int time = date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+                    byte[] value = Integer.toString(time).getBytes();
+                    byte[] send = new byte[value.length+1];
+                    send[0] = 'T';
+                    System.arraycopy(value, 0, send, 1, value.length);
+                    mService.writeRXCharacteristic(send);
+                    //Update the log with time stamp
+                    String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                    listAdapter.add("[" + currentDateTimeString + "] TX: " + new String(send));
+                    messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+                }catch(Exception e){
+
+                }
+
             }
         });
      
