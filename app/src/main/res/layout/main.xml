@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/sendButton"
                 android:layout_alignParentLeft="true"
-                android:layout_below="@+id/buttonSendTime">
+                android:layout_below="@+id/buttonCreateNotif">
             </ListView>
 
             <Button
@@ -71,6 +71,14 @@
                 android:text="Send Time"
                 android:id="@+id/buttonSendTime"
                 android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Create Notification"
+                android:id="@+id/buttonCreateNotif"
+                android:layout_below="@+id/buttonSendTime"
                 android:layout_centerHorizontal="true" />
 
         </RelativeLayout>

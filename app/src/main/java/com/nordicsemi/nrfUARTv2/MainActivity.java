@@ -34,7 +34,10 @@ import java.util.Date;
 import com.nordicsemi.nrfUARTv2.UartService;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -54,6 +57,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -79,13 +83,16 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
     TextView mRemoteRssiVal;
     RadioGroup mRg;
     private int mState = UART_PROFILE_DISCONNECTED;
-    private UartService mService = null;
+    public UartService mService = null;
     private BluetoothDevice mDevice = null;
     private BluetoothAdapter mBtAdapter = null;
     private ListView messageListView;
     private ArrayAdapter<String> listAdapter;
-    private Button btnConnectDisconnect,btnSend, btnSendTime;
+    private Button btnConnectDisconnect,btnSend,btnSendTime, btnCreateNotif;
     private EditText edtMessage;
+
+    private NotificationReceiver nReceiver;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,10 +110,14 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         btnConnectDisconnect=(Button) findViewById(R.id.btn_select);
         btnSend=(Button) findViewById(R.id.sendButton);
         btnSendTime =(Button)findViewById(R.id.buttonSendTime);
+        btnCreateNotif = (Button)findViewById(R.id.buttonCreateNotif);
         edtMessage = (EditText) findViewById(R.id.sendText);
         service_init();
 
-     
+        nReceiver = new NotificationReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.nordicsemi.nrfUARTv2.NOTIFICATION_LISTENER_EXAMPLE");
+        registerReceiver(nReceiver,filter);
        
         // Handle Disconnect & Connect button
         btnConnectDisconnect.setOnClickListener(new View.OnClickListener() {
@@ -116,22 +127,20 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                     Log.i(TAG, "onClick - BT not enabled yet");
                     Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-                }
-                else {
-                	if (btnConnectDisconnect.getText().equals("Connect")){
-                		
-                		//Connect button pressed, open DeviceListActivity class, with popup windows that scan for devices
-                		
-            			Intent newIntent = new Intent(MainActivity.this, DeviceListActivity.class);
-            			startActivityForResult(newIntent, REQUEST_SELECT_DEVICE);
-        			} else {
-        				//Disconnect button pressed
-        				if (mDevice!=null)
-        				{
-        					mService.disconnect();
-        					
-        				}
-        			}
+                } else {
+                    if (btnConnectDisconnect.getText().equals("Connect")) {
+
+                        //Connect button pressed, open DeviceListActivity class, with popup windows that scan for devices
+
+                        Intent newIntent = new Intent(MainActivity.this, DeviceListActivity.class);
+                        startActivityForResult(newIntent, REQUEST_SELECT_DEVICE);
+                    } else {
+                        //Disconnect button pressed
+                        if (mDevice != null) {
+                            mService.disconnect();
+
+                        }
+                    }
                 }
             }
         });
@@ -180,11 +189,25 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
 
             }
         });
+
+        btnCreateNotif.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                NotificationManager nManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                NotificationCompat.Builder ncomp = new NotificationCompat.Builder(getApplicationContext());
+                ncomp.setContentTitle("My Notification");
+                ncomp.setContentText("Notification Listener Service Example");
+                ncomp.setTicker("Notification Listener Service Example");
+                ncomp.setSmallIcon(R.drawable.nrfuart_hdpi_icon);
+                ncomp.setAutoCancel(true);
+                nManager.notify((int)System.currentTimeMillis(),ncomp.build());
+            }
+        });
      
         // Set initial UI state
         
     }
-    
+
     //UART service connected/disconnected
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder rawBinder) {
@@ -320,7 +343,8 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         unbindService(mServiceConnection);
         mService.stopSelf();
         mService= null;
-       
+
+        unregisterReceiver(nReceiver);
     }
 
     @Override
@@ -404,6 +428,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
   
     }
 
+
     @Override
     public void onBackPressed() {
         if (mState == UART_PROFILE_CONNECTED) {
@@ -427,6 +452,41 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
             })
             .setNegativeButton(R.string.popup_no, null)
             .show();
+        }
+    }
+
+    class NotificationReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            try {
+                String temp = intent.getStringExtra("notification_event");
+
+                //Update the log with time stamp
+                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+
+                if(temp.isEmpty()){
+                    mService.writeRXCharacteristic(new byte[]{'C'});
+
+                    listAdapter.add("[" + currentDateTimeString + "] TX: C");
+                    messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+                }else{
+                    if(temp.length() > 19)
+                        temp = temp.substring(0, 19);
+                    byte[] value = temp.getBytes();
+                    byte[] send = new byte[value.length+1];
+                    send[0] = 'N';
+                    System.arraycopy(value, 0, send, 1, value.length);
+                    mService.writeRXCharacteristic(send);
+
+                    listAdapter.add("[" + currentDateTimeString + "] TX: " + new String(send));
+                    messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
