@@ -68,6 +68,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -89,6 +90,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
     private ListView messageListView;
     private ArrayAdapter<String> listAdapter;
     private Button btnConnectDisconnect,btnSend,btnSendTime, btnCreateNotif;
+    private SeekBar seekBrighness;
     private EditText edtMessage;
 
     private NotificationReceiver nReceiver;
@@ -112,6 +114,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         btnSendTime =(Button)findViewById(R.id.buttonSendTime);
         btnCreateNotif = (Button)findViewById(R.id.buttonCreateNotif);
         edtMessage = (EditText) findViewById(R.id.sendText);
+        seekBrighness = (SeekBar)findViewById(R.id.seekBrightness);
         service_init();
 
         nReceiver = new NotificationReceiver();
@@ -201,6 +204,34 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                 ncomp.setSmallIcon(R.drawable.nrfuart_hdpi_icon);
                 ncomp.setAutoCancel(true);
                 nManager.notify((int)System.currentTimeMillis(),ncomp.build());
+            }
+        });
+
+        seekBrighness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                try {
+                    byte[] send = new byte[2];
+                    send[0] = 'B';
+                    send[1] = (byte)(seekBar.getProgress() * 2.55);
+                    mService.writeRXCharacteristic(send);
+                    //Update the log with time stamp
+                    String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                    listAdapter.add("[" + currentDateTimeString + "] TX: " + new String(send));
+                    messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+                }catch(Exception e){
+
+                }
             }
         });
      
@@ -395,7 +426,6 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                 Log.d(TAG, "... onActivityResultdevice.address==" + mDevice + "mserviceValue" + mService);
                 ((TextView) findViewById(R.id.deviceName)).setText(mDevice.getName()+ " - connecting");
                 mService.connect(deviceAddress);
-                            
 
             }
             break;

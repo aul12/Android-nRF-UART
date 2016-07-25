@@ -2,28 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
-
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <Button
-            android:id="@+id/btn_select"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:text="Connect" />
-    </LinearLayout>
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/linearLayout3"
         android:layout_width="match_parent"
         android:layout_height="160dp"
         android:layout_weight="0.31"
-        android:orientation="vertical" >
+        android:orientation="vertical"
+        android:layout_margin="4dp">
 
         <RelativeLayout
             android:id="@+id/RelativeLayout1"
@@ -53,7 +40,8 @@
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/sendButton"
                 android:layout_alignParentLeft="true"
-                android:layout_below="@+id/buttonCreateNotif">
+                style="@android:style/Widget.DeviceDefault.ExpandableListView"
+                android:layout_below="@+id/seekBrightness">
             </ListView>
 
             <Button
@@ -63,23 +51,56 @@
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
                 android:enabled="false"
-                android:text="Send" />
+                android:text="Send"
+                android:elevation="2dp" />
+
+            <TextView
+                android:text="Brightness:"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView"
+                android:layout_below="@+id/buttonCreateNotif"
+                android:layout_alignParentStart="true"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"
+                android:layout_margin="4dp"/>
+
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/seekBrightness"
+                android:max="100"
+                android:layout_below="@+id/textView"
+                android:layout_centerHorizontal="true"
+                android:progress="100"
+                android:layout_margin="4dp"/>
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Send Time"
                 android:id="@+id/buttonSendTime"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true" />
+                android:elevation="2dp"
+                android:layout_below="@+id/btn_select"
+                android:layout_alignParentStart="true" />
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Create Notification"
                 android:id="@+id/buttonCreateNotif"
+                android:elevation="2dp"
                 android:layout_below="@+id/buttonSendTime"
                 android:layout_centerHorizontal="true" />
+
+            <Button
+                android:id="@+id/btn_select"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="Connect"
+                android:elevation="2dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true" />
 
         </RelativeLayout>
     </LinearLayout>
